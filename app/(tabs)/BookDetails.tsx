@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, Image } from 'react-native';
-import { Text, IconButton, Card, TextInput, Button, Menu } from 'react-native-paper';
+import { Text, IconButton, Card, TextInput, Button, Menu, Dialog, Portal } from 'react-native-paper';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { updateBook } from '../../src/api/booksApi'; // ✅ Importar la función de la API
+import LottieView from 'lottie-react-native';
 
 const DEFAULT_IMAGE = 'https://m.media-amazon.com/images/I/81y9XvteVOL._UF894,1000_QL80_.jpg';
 
@@ -18,8 +19,21 @@ export default function BookDetailsScreen() {
 
   const [statusMenuVisible, setStatusMenuVisible] = useState(false);
   const [categoryMenuVisible, setCategoryMenuVisible] = useState(false);
+  const [dialogVisible, setDialogVisible] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [dialogMessage, setDialogMessage] = useState('');
 
-  // ✅ Guardar los cambios realizados en la base de datos
+  const showDialog = (success, message) => {
+    setIsSuccess(success);
+    setDialogMessage(message);
+    setDialogVisible(true);
+  };
+
+  const hideDialog = () => {
+    setDialogVisible(false);
+    if (isSuccess) router.back();
+  };
+
   const handleSave = async () => {
     try {
       await updateBook(id, {
@@ -29,12 +43,11 @@ export default function BookDetailsScreen() {
         category: editedCategory,
         image: image || DEFAULT_IMAGE,
       });
-      alert('📚 ¡Cambios guardados con éxito!');
+      showDialog(true, '📚 ¡Cambios guardados con éxito!');
       setIsEditing(false);
-      router.back(); // ✅ Volver a la pantalla principal para ver los cambios reflejados
     } catch (error) {
       console.error('Error al actualizar el libro:', error);
-      alert('❌ Error al guardar los cambios.');
+      showDialog(false, '❌ Error al guardar los cambios.');
     }
   };
 
@@ -53,15 +66,12 @@ export default function BookDetailsScreen() {
         <Card.Content>
           {isEditing ? (
             <>
-              {/* Edición del Nombre */}
               <TextInput
                 label="Nombre del libro"
                 value={editedName}
                 onChangeText={setEditedName}
                 style={styles.input}
               />
-
-              {/* Edición del ISBN */}
               <TextInput
                 label="ISBN"
                 value={editedIsbn}
@@ -69,7 +79,6 @@ export default function BookDetailsScreen() {
                 style={styles.input}
               />
 
-              {/* Menú desplegable para el Estatus */}
               <Menu
                 visible={statusMenuVisible}
                 onDismiss={() => setStatusMenuVisible(false)}
@@ -95,7 +104,6 @@ export default function BookDetailsScreen() {
                 ))}
               </Menu>
 
-              {/* Menú desplegable para la Categoría */}
               <Menu
                 visible={categoryMenuVisible}
                 onDismiss={() => setCategoryMenuVisible(false)}
@@ -121,14 +129,12 @@ export default function BookDetailsScreen() {
                 ))}
               </Menu>
 
-              {/* Botón para guardar cambios */}
               <Button mode="contained" onPress={handleSave} style={styles.saveButton}>
                 Guardar Cambios
               </Button>
             </>
           ) : (
             <>
-              {/* Visualización de datos si no está en modo de edición */}
               <Text style={styles.bookTitle}>{editedName}</Text>
               <Text style={styles.bookInfo}>📚 Categoría: {editedCategory}</Text>
               <Text style={styles.bookInfo}>🔖 ISBN: {editedIsbn}</Text>
@@ -138,13 +144,29 @@ export default function BookDetailsScreen() {
         </Card.Content>
       </Card>
 
-      {/* Botón para alternar entre modo de edición y vista */}
       <IconButton
         icon={isEditing ? 'check-circle' : 'pencil'}
         size={40}
         style={styles.editButton}
         onPress={() => setIsEditing(!isEditing)}
       />
+
+      <Portal>
+        <Dialog visible={dialogVisible} onDismiss={hideDialog}>
+          <Dialog.Content>
+            <LottieView
+              source={isSuccess ? require('../../assets/animations/succes.json') : require('../../assets/animations/error.json')}
+              autoPlay
+              loop={false}
+              style={{ height: 150 }}
+            />
+            <Text style={styles.dialogMessage}>{dialogMessage}</Text>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={hideDialog}>Aceptar</Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
     </View>
   );
 }
@@ -198,6 +220,11 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   saveButton: {
+    marginTop: 10,
+  },
+  dialogMessage: {
+    textAlign: 'center',
+    fontSize: 16,
     marginTop: 10,
   },
 });

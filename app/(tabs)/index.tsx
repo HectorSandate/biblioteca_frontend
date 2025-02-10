@@ -1,17 +1,25 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { View, FlatList, StyleSheet, Image, Dimensions, ScrollView } from 'react-native';
-import { Card, Text, IconButton, Button, TextInput } from 'react-native-paper';
-import { Link, useRouter, useFocusEffect } from 'expo-router';
-import { getBooks } from '../../src/api/booksApi'; // ✅ Importa la API
+import React, { useState, useCallback, useEffect } from "react";
+import {
+  View,
+  FlatList,
+  StyleSheet,
+  Image,
+  Dimensions,
+  ScrollView,
+} from "react-native";
+import { Card, Text, IconButton, Button, TextInput } from "react-native-paper";
+import { Link, useRouter, useFocusEffect } from "expo-router";
+import { getBooks } from "../../src/api/booksApi"; // ✅ Importa la API
 
-const { width } = Dimensions.get('window');
-const DEFAULT_IMAGE = 'https://edit.org/images/cat/portadas-libros-big-2019101610.jpg';
+const { width } = Dimensions.get("window");
+const DEFAULT_IMAGE =
+  "https://edit.org/images/cat/portadas-libros-big-2019101610.jpg";
 
 export default function HomeScreen() {
   const router = useRouter();
   const [books, setBooks] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterStatus, setFilterStatus] = useState('Todos');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState("Todos");
 
   // ✅ Cargar los libros al iniciar la app y al regresar a la pantalla principal
   const fetchBooks = async () => {
@@ -19,7 +27,7 @@ export default function HomeScreen() {
       const data = await getBooks();
       setBooks(data);
     } catch (error) {
-      console.error('Error al cargar los libros:', error);
+      console.error("Error al cargar los libros:", error);
     }
   };
 
@@ -36,7 +44,7 @@ export default function HomeScreen() {
   // ✅ Filtrado por búsqueda y estado
   const filteredBooks = books.filter(
     (book) =>
-      (filterStatus === 'Todos' || book.status === filterStatus) &&
+      (filterStatus === "Todos" || book.status === filterStatus) &&
       book.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -48,34 +56,56 @@ export default function HomeScreen() {
         <TextInput
           mode="outlined"
           placeholder="🔍 Buscar libro..."
+          placeholderTextColor="#B0B0B0"
           value={searchQuery}
           onChangeText={setSearchQuery}
           style={styles.searchBar}
+          theme={{
+            colors: {
+              text: "#FFFFFF", // Texto blanco
+              primary: "#4A90E2", // Color del borde cuando está enfocado
+              background: "#1E1E1E", // Fondo oscuro
+              placeholder: "#B0B0B0", // Placeholder gris claro
+            },
+          }}
+          right={
+            searchQuery ? ( //  Mostrar la "X" solo si hay texto
+              <TextInput.Icon
+                icon="close"
+                onPress={() => setSearchQuery("")} //  Borra el texto
+                color="#FFFFFF"
+              />
+            ) : null
+          }
         />
-
-        <View style={styles.filterButtonsContainer}>
-          {['Todos', 'Prestado', 'Perdido', 'Disponible'].map((status) => (
+        {/* Filtrado por estado */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false} // Opcional: oculta la barra de scroll
+          contentContainerStyle={styles.filterButtonsContainer} // Estilo del contenedor
+        >
+          {["Todos", "Prestado", "Perdido", "Disponible"].map((status) => (
             <Button
               key={status}
-              mode={filterStatus === status ? 'contained' : 'outlined'}
+              mode={filterStatus === status ? "contained" : "outlined"}
               onPress={() => setFilterStatus(status)}
               style={[
                 styles.filterButton,
                 filterStatus === status && styles.activeFilterButton,
               ]}
-              labelStyle={{ color: filterStatus === status ? '#fff' : '#000' }}
+              labelStyle={{ color: filterStatus === status ? "#fff" : "#000" }}
             >
               {status}
             </Button>
           ))}
-        </View>
+        </ScrollView>
 
         {filteredBooks.length > 0 && (
           <Card
             style={styles.featuredCard}
             onPress={() =>
               router.push({
-                pathname: '/BookDetails',
+                pathname: "/BookDetails",
                 params: {
                   id: filteredBooks[0]?.id,
                   name: filteredBooks[0]?.name,
@@ -93,7 +123,7 @@ export default function HomeScreen() {
             />
             <Card.Content>
               <Text style={styles.featuredTitle}>
-                {filteredBooks[0]?.name || 'Libro Destacado'}
+                {filteredBooks[0]?.name || "Libro Destacado"}
               </Text>
             </Card.Content>
           </Card>
@@ -115,7 +145,7 @@ export default function HomeScreen() {
                   style={styles.bookCard}
                   onPress={() =>
                     router.push({
-                      pathname: '/BookDetails',
+                      pathname: "/BookDetails",
                       params: {
                         id: item.id,
                         name: item.name,
@@ -148,7 +178,11 @@ export default function HomeScreen() {
       </ScrollView>
 
       <Link href="/add" asChild>
-        <IconButton icon="plus-circle" size={50} style={styles.floatingButton} />
+        <IconButton
+          icon="plus-circle"
+          size={50}
+          style={styles.floatingButton}
+        />
       </Link>
     </View>
   );
@@ -158,82 +192,89 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#121212',
+    backgroundColor: "#121212",
   },
   searchBar: {
-    marginBottom: 10,
-    backgroundColor: '#fff',
+    backgroundColor: "#1E1E1E", // Fondo más oscuro
+    color: "#FFFFFF", // Texto blanco
+    borderRadius: 5, // Bordes redondeados
+    paddingHorizontal: 10, // Espaciado interno horizontal
+    paddingVertical: 2, // Espaciado interno vertical
+    fontSize: 16, // Tamaño del texto
+    borderWidth: 1, // Grosor del borde
+    borderColor: "#4A90E2", // Borde azul claro
+    marginBottom: 15, // Separación inferior
   },
   filterButtonsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+    flexDirection: "row",
+    justifyContent: "space-around",
     marginBottom: 10,
   },
   filterButton: {
     borderRadius: 20,
     paddingHorizontal: 10,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: "#f0f0f0",
   },
   activeFilterButton: {
-    backgroundColor: '#4A90E2',
+    backgroundColor: "#4A90E2",
   },
   featuredCard: {
     borderRadius: 15,
     marginBottom: 20,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   featuredImage: {
     height: 180,
   },
   featuredTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginTop: 8,
-    color: '#fff',
+    color: "#fff",
   },
   categorySection: {
     marginBottom: 20,
   },
   categoryHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 10,
   },
   categoryTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
+    fontWeight: "bold",
+    color: "#FFFFFF",
   },
   bookCard: {
     marginRight: 10,
     borderRadius: 12,
-    overflow: 'hidden',
+    overflow: "hidden",
     width: width * 0.4,
-    backgroundColor: '#1E1E1E',
+    backgroundColor: "#1E1E1E",
   },
   bookImage: {
     height: 150,
-    width: '100%',
+    width: "100%",
   },
   bookTitle: {
     marginTop: 8,
     fontSize: 14,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontWeight: "bold",
+    color: "#fff",
   },
   bookStatus: {
-    color: '#FFD700',
+    color: "#FFD700",
   },
   bookCategory: {
-    color: '#9BA1A6',
-    fontStyle: 'italic',
+    color: "#9BA1A6",
+    fontStyle: "italic",
   },
   floatingButton: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 20,
     right: 20,
-    backgroundColor: '#4A90E2',
+    backgroundColor: "#4A90E2",
     borderRadius: 30,
   },
 });
